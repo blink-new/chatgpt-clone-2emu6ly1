@@ -209,7 +209,7 @@ export const ChatInterface: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-screen">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b bg-white">
           <div className="flex items-center space-x-3">
@@ -232,12 +232,12 @@ export const ChatInterface: React.FC = () => {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 overflow-hidden">
           {!currentChat || currentChat.messages.length === 0 ? (
             <EmptyState />
           ) : (
-            <ScrollArea className="flex-1 custom-scrollbar">
-              <div className="max-w-4xl mx-auto">
+            <ScrollArea className="h-full custom-scrollbar">
+              <div className="max-w-4xl mx-auto pb-4">
                 {currentChat.messages.map((message) => (
                   <div key={message.id} className="message-enter">
                     <ChatMessage
@@ -250,8 +250,10 @@ export const ChatInterface: React.FC = () => {
               </div>
             </ScrollArea>
           )}
+        </div>
 
-          {/* Input */}
+        {/* Input - Fixed at bottom */}
+        <div className="flex-shrink-0">
           <ChatInput
             onSendMessage={handleSendMessage}
             disabled={state.isLoading}
