@@ -60,14 +60,17 @@ export const ChatInterface: React.FC = () => {
     try {
       let streamedContent = ''
       
-      // Prepare the AI request
+      // Prepare the AI request with better prompting for medical images
       const aiRequest = images && images.length > 0 
         ? {
             messages: [
               {
                 role: 'user' as const,
                 content: [
-                  { type: 'text' as const, text: content || 'What do you see in this image?' },
+                  { 
+                    type: 'text' as const, 
+                    text: content || 'Please describe what you can observe in this image from a technical and educational perspective. Focus on visible patterns, structures, and general observations without providing medical diagnosis or advice.'
+                  },
                   ...images.map(imageUrl => ({
                     type: 'image' as const,
                     image: imageUrl
@@ -75,12 +78,12 @@ export const ChatInterface: React.FC = () => {
                 ]
               }
             ],
-            model: 'gpt-4o-mini',
+            model: 'gpt-4o',
             maxTokens: 2000
           }
         : {
             prompt: content,
-            model: 'gpt-4o-mini',
+            model: 'gpt-4o',
             maxTokens: 2000
           }
       
@@ -96,7 +99,19 @@ export const ChatInterface: React.FC = () => {
       updateMessage(assistantMessageId, streamedContent)
     } catch (error) {
       console.error('Error generating response:', error)
-      updateMessage(assistantMessageId, 'Sorry, I encountered an error while generating a response. Please try again.')
+      
+      // Check if it's a medical image refusal
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      if (errorMessage.toLowerCase().includes('medical') || 
+          errorMessage.toLowerCase().includes('x-ray') ||
+          errorMessage.toLowerCase().includes('diagnosis') ||
+          errorMessage.toLowerCase().includes('health')) {
+        updateMessage(assistantMessageId, 
+          `I understand you've uploaded what appears to be a medical image. While I can see the image, I'm designed to avoid providing medical diagnoses or interpretations of medical imagery for safety reasons.\n\nFor medical images like X-rays, CT scans, or MRIs, please consult with qualified healthcare professionals who can provide proper medical interpretation.\n\nI'd be happy to help with other types of images or answer general questions about medical imaging technology from an educational perspective.`
+        )
+      } else {
+        updateMessage(assistantMessageId, 'Sorry, I encountered an error while analyzing this image. This might be due to the image format, size, or content restrictions. Please try with a different image or ask a text-based question.')
+      }
     } finally {
       setStreaming(false)
       setCurrentStreamingMessageId(null)
@@ -162,7 +177,12 @@ export const ChatInterface: React.FC = () => {
           </div>
           <div className="p-3 bg-gray-50 rounded-lg text-left">
             <div className="text-gray-600">
-              📸 Upload an image and ask "What do you see?"
+              📸 Upload images for analysis (photos, diagrams, artwork)
+            </div>
+          </div>
+          <div className="p-3 bg-yellow-50 rounded-lg text-left border border-yellow-200">
+            <div className="text-yellow-800 text-xs">
+              ⚠️ Note: Medical images (X-rays, scans) are analyzed for educational purposes only. Always consult healthcare professionals for medical interpretations.
             </div>
           </div>
         </div>
@@ -207,7 +227,7 @@ export const ChatInterface: React.FC = () => {
           </div>
           
           <div className="text-sm text-gray-500">
-            GPT-4o Mini
+            GPT-4o
           </div>
         </div>
 
