@@ -59,6 +59,22 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onRegenerate 
               {isUser ? 'You' : 'ChatGPT'}
             </div>
             
+            {/* Images */}
+            {message.images && message.images.length > 0 && (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {message.images.map((imageUrl, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={imageUrl}
+                      alt={`Uploaded image ${index + 1}`}
+                      className="max-w-xs max-h-48 rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => window.open(imageUrl, '_blank')}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+            
             <div className="prose prose-sm max-w-none">
               {message.isStreaming ? (
                 <div className="flex items-center space-x-2">

@@ -4,6 +4,14 @@ export interface Message {
   role: 'user' | 'assistant'
   timestamp: number
   isStreaming?: boolean
+  images?: string[] // Array of image URLs
+}
+
+export interface ImageUpload {
+  file: File
+  preview: string
+  uploaded?: boolean
+  url?: string
 }
 
 export interface Chat {

@@ -30,7 +30,7 @@ export const ChatInterface: React.FC = () => {
     }
   }, [state.isLoading, state.chats.length, createNewChat])
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (content: string, images?: string[]) => {
     if (!state.currentChatId) {
       const newChatId = createNewChat()
       // Wait a bit for the chat to be created
@@ -40,7 +40,8 @@ export const ChatInterface: React.FC = () => {
     // Add user message
     addMessage({
       content,
-      role: 'user'
+      role: 'user',
+      images
     })
 
     // Add streaming assistant message
@@ -59,12 +60,32 @@ export const ChatInterface: React.FC = () => {
     try {
       let streamedContent = ''
       
+      // Prepare the AI request
+      const aiRequest = images && images.length > 0 
+        ? {
+            messages: [
+              {
+                role: 'user' as const,
+                content: [
+                  { type: 'text' as const, text: content || 'What do you see in this image?' },
+                  ...images.map(imageUrl => ({
+                    type: 'image' as const,
+                    image: imageUrl
+                  }))
+                ]
+              }
+            ],
+            model: 'gpt-4o-mini',
+            maxTokens: 2000
+          }
+        : {
+            prompt: content,
+            model: 'gpt-4o-mini',
+            maxTokens: 2000
+          }
+      
       await blink.ai.streamText(
-        {
-          prompt: content,
-          model: 'gpt-4o-mini',
-          maxTokens: 2000
-        },
+        aiRequest,
         (chunk) => {
           streamedContent += chunk
           updateMessage(assistantMessageId, streamedContent)
@@ -104,7 +125,7 @@ export const ChatInterface: React.FC = () => {
       .find(msg => msg.role === 'user')
 
     if (lastUserMessage) {
-      await handleSendMessage(lastUserMessage.content)
+      await handleSendMessage(lastUserMessage.content, lastUserMessage.images)
     }
   }
 
@@ -120,7 +141,7 @@ export const ChatInterface: React.FC = () => {
           How can I help you today?
         </h2>
         <p className="text-gray-600 mb-6">
-          Start a conversation by typing a message below. I can help with questions, creative writing, analysis, coding, and much more.
+          Start a conversation by typing a message below. I can help with questions, creative writing, analysis, coding, and much more. You can also upload images for analysis!
         </p>
         <div className="grid grid-cols-1 gap-2 text-sm">
           <div className="p-3 bg-gray-50 rounded-lg text-left">
@@ -137,6 +158,11 @@ export const ChatInterface: React.FC = () => {
           <div className="p-3 bg-gray-50 rounded-lg text-left">
             <div className="text-gray-600">
               "Help me debug this JavaScript code"
+            </div>
+          </div>
+          <div className="p-3 bg-gray-50 rounded-lg text-left">
+            <div className="text-gray-600">
+              📸 Upload an image and ask "What do you see?"
             </div>
           </div>
         </div>
