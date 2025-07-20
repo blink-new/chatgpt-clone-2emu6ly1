@@ -1,0 +1,10 @@
+/* App-specific styles */
+.app {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Ensure full height layout */
+#root {
+  height: 100vh;
+}
